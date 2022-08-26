@@ -1,10 +1,10 @@
 import { NEAR_SIGNING_METHODS } from '@/data/NEARData'
 import { formatJsonRpcError, formatJsonRpcResult } from '@json-rpc-tools/utils'
 import { SignClientTypes } from '@walletconnect/types'
-import { ERROR } from '@walletconnect/utils'
 import { nearWallet } from '@/utils/NearWalletUtil'
 import { transactions } from "near-api-js";
 import { createAction } from "@near-wallet-selector/wallet-utils";
+import { getSdkError } from '@walletconnect/utils'
 
 export async function approveNearRequest(
   requestEvent: SignClientTypes.EventArguments['session_request']
@@ -121,9 +121,9 @@ export async function approveNearRequest(
 
       const transactions = await nearWallet.createTransactions({
         chainId,
-        transactions: params.request.params.transactions.map((transaction) => ({
+        transactions: params.request.params.transactions.map((transaction: transactions.Transaction) => ({
           ...transaction,
-          actions: transaction.actions.map(createAction),
+          actions: transaction.actions.map(createAction as any),
         }))
       });
 
@@ -136,12 +136,11 @@ export async function approveNearRequest(
       return formatJsonRpcResult(id, result);
     }
     default:
-      throw new Error(ERROR.UNKNOWN_JSONRPC_METHOD.format().message)
+      throw new Error(getSdkError('INVALID_METHOD').message)
   }
 }
 
 export function rejectNearRequest(request: SignClientTypes.EventArguments['session_request']) {
   const { id } = request
-
-  return formatJsonRpcError(id, ERROR.JSONRPC_REQUEST_METHOD_REJECTED.format().message)
+  return formatJsonRpcError(id, getSdkError('USER_REJECTED_METHODS').message)
 }

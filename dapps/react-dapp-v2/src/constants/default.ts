@@ -8,6 +8,7 @@ export const DEFAULT_MAIN_CHAINS = [
   "eip155:42220",
   "cosmos:cosmoshub-4",
   "solana:4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ",
+  "polkadot:91b171bb158e2d3848fa23a9f1c25182",
 ];
 
 export const DEFAULT_TEST_CHAINS = [
@@ -18,14 +19,14 @@ export const DEFAULT_TEST_CHAINS = [
   "eip155:421611",
   "eip155:44787",
   "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K",
+  "polkadot:e143f23803ac50e8f6f8e62695d1ce9e",
   "near:testnet",
 ];
 
 export const DEFAULT_CHAINS = [...DEFAULT_MAIN_CHAINS, ...DEFAULT_TEST_CHAINS];
 
-export const DEFAULT_PROJECT_ID = process.env.REACT_APP_PROJECT_ID;
-
-export const DEFAULT_RELAY_URL = process.env.REACT_APP_RELAY_URL;
+export const DEFAULT_PROJECT_ID = process.env.NEXT_PROJECT_ID;
+export const DEFAULT_RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL;
 
 export const DEFAULT_LOGGER = "debug";
 
@@ -71,6 +72,19 @@ export enum DEFAULT_SOLANA_METHODS {
 }
 
 export enum DEFAULT_SOLANA_EVENTS {}
+
+/**
+ * POLKADOT
+ */
+export enum DEFAULT_POLKADOT_METHODS {
+  POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction",
+  POLKADOT_SIGN_MESSAGE = "polkadot_signMessage",
+}
+
+export enum DEFAULT_POLKADOT_EVENTS {}
+
+export const DEFAULT_GITHUB_REPO_URL =
+  "https://github.com/WalletConnect/web-examples/tree/main/dapps/react-dapp-v2";
 
 /**
  * NEAR

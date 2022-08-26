@@ -1,6 +1,13 @@
 import { apiGetChainNamespace, ChainsMap } from "caip-api";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { SolanaChainData } from "../chains/solana";
+import { PolkadotChainData } from "../chains/polkadot";
 import { NearChainData } from "../chains/near";
 
 import { ChainNamespaces, getAllChainNamespaces } from "../helpers";
@@ -20,18 +27,24 @@ export const ChainDataContext = createContext<IContext>({} as IContext);
 /**
  * Provider
  */
-export function ChainDataContextProvider({ children }: { children: ReactNode | ReactNode[] }) {
+export function ChainDataContextProvider({
+  children,
+}: {
+  children: ReactNode | ReactNode[];
+}) {
   const [chainData, setChainData] = useState<ChainNamespaces>({});
 
   const loadChainData = async () => {
     const namespaces = getAllChainNamespaces();
     const chainData: ChainNamespaces = {};
     await Promise.all(
-      namespaces.map(async namespace => {
+      namespaces.map(async (namespace) => {
         let chains: ChainsMap | undefined;
         try {
           if (namespace === "solana") {
             chains = SolanaChainData;
+          } else if (namespace === "polkadot") {
+            chains = PolkadotChainData;
           } else if (namespace === "near") {
             chains = NearChainData;
           } else {
@@ -43,7 +56,7 @@ export function ChainDataContextProvider({ children }: { children: ReactNode | R
         if (typeof chains !== "undefined") {
           chainData[namespace] = chains;
         }
-      }),
+      })
     );
 
     setChainData(chainData);
@@ -67,7 +80,9 @@ export function ChainDataContextProvider({ children }: { children: ReactNode | R
 export function useChainData() {
   const context = useContext(ChainDataContext);
   if (context === undefined) {
-    throw new Error("useChainData must be used within a ChainDataContextProvider");
+    throw new Error(
+      "useChainData must be used within a ChainDataContextProvider"
+    );
   }
   return context;
 }

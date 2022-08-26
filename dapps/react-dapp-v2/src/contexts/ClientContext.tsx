@@ -1,6 +1,6 @@
 import Client from "@walletconnect/sign-client";
 import { PairingTypes, SessionTypes } from "@walletconnect/types";
-import QRCodeModal from "@walletconnect/legacy-modal";
+import QRCodeModal from "@walletconnect/qrcode-modal";
 import {
   createContext,
   ReactNode,
@@ -19,7 +19,7 @@ import {
   DEFAULT_RELAY_URL,
 } from "../constants";
 import { AccountBalances, apiGetAccountBalance } from "../helpers";
-import { ERROR, getAppMetadata } from "@walletconnect/utils";
+import { getAppMetadata, getSdkError } from "@walletconnect/utils";
 import { getPublicKeysFromAccounts } from "../helpers/solana";
 import { getRequiredNamespaces } from "../helpers/namespaces";
 
@@ -49,7 +49,11 @@ export const ClientContext = createContext<IContext>({} as IContext);
 /**
  * Provider
  */
-export function ClientContextProvider({ children }: { children: ReactNode | ReactNode[] }) {
+export function ClientContextProvider({
+  children,
+}: {
+  children: ReactNode | ReactNode[];
+}) {
   const [client, setClient] = useState<Client>();
   const [pairings, setPairings] = useState<PairingTypes.Struct[]>([]);
   const [session, setSession] = useState<SessionTypes.Struct>();
@@ -59,7 +63,8 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
 
   const [balances, setBalances] = useState<AccountBalances>({});
   const [accounts, setAccounts] = useState<string[]>([]);
-  const [solanaPublicKeys, setSolanaPublicKeys] = useState<Record<string, PublicKey>>();
+  const [solanaPublicKeys, setSolanaPublicKeys] =
+    useState<Record<string, PublicKey>>();
   const [chains, setChains] = useState<string[]>([]);
 
   const reset = () => {
@@ -73,12 +78,12 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
     setIsFetchingBalances(true);
     try {
       const arr = await Promise.all(
-        _accounts.map(async account => {
+        _accounts.map(async (account) => {
           const [namespace, reference, address] = account.split(":");
           const chainId = `${namespace}:${reference}`;
           const assets = await apiGetAccountBalance(address, chainId);
           return { account, assets: [assets] };
-        }),
+        })
       );
 
       const balances: AccountBalances = {};
@@ -93,28 +98,34 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
     }
   };
 
-  const onSessionConnected = useCallback(async (_session: SessionTypes.Struct) => {
-    const allNamespaceAccounts = Object.values(_session.namespaces)
-      .map(namespace => namespace.accounts)
-      .flat();
-    const allNamespaceChains = Object.keys(_session.namespaces);
+  const onSessionConnected = useCallback(
+    async (_session: SessionTypes.Struct) => {
+      const allNamespaceAccounts = Object.values(_session.namespaces)
+        .map((namespace) => namespace.accounts)
+        .flat();
+      const allNamespaceChains = Object.keys(_session.namespaces);
 
-    setSession(_session);
-    setChains(allNamespaceChains);
-    setAccounts(allNamespaceAccounts);
-    setSolanaPublicKeys(getPublicKeysFromAccounts(allNamespaceAccounts));
-    await getAccountBalances(allNamespaceAccounts);
-  }, []);
+      setSession(_session);
+      setChains(allNamespaceChains);
+      setAccounts(allNamespaceAccounts);
+      setSolanaPublicKeys(getPublicKeysFromAccounts(allNamespaceAccounts));
+      await getAccountBalances(allNamespaceAccounts);
+    },
+    []
+  );
 
   const connect = useCallback(
-    async pairing => {
+    async (pairing: any) => {
       if (typeof client === "undefined") {
         throw new Error("WalletConnect is not initialized");
       }
       console.log("connect, pairing topic is:", pairing?.topic);
       try {
         const requiredNamespaces = getRequiredNamespaces(chains);
-        console.log("requiredNamespaces config for connect:", requiredNamespaces);
+        console.log(
+          "requiredNamespaces config for connect:",
+          requiredNamespaces
+        );
 
         const { uri, approval } = await client.connect({
           pairingTopic: pairing?.topic,
@@ -131,6 +142,8 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
         const session = await approval();
         console.log("Established session:", session);
         await onSessionConnected(session);
+        // Update known pairings after session is connected.
+        setPairings(client.pairing.getAll({ active: true }));
       } catch (e) {
         console.error(e);
         // ignore rejection
@@ -139,7 +152,7 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
         QRCodeModal.close();
       }
     },
-    [chains, client, onSessionConnected],
+    [chains, client, onSessionConnected]
   );
 
   const disconnect = useCallback(async () => {
@@ -151,7 +164,7 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
     }
     await client.disconnect({
       topic: session.topic,
-      reason: ERROR.USER_DISCONNECTED.format(),
+      reason: getSdkError("USER_DISCONNECTED"),
     });
     // Reset app state after disconnect.
     reset();
@@ -163,11 +176,11 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
         throw new Error("WalletConnect is not initialized");
       }
 
-      _client.on("session_ping", args => {
+      _client.on("session_ping", (args) => {
         console.log("EVENT", "session_ping", args);
       });
 
-      _client.on("session_event", args => {
+      _client.on("session_event", (args) => {
         console.log("EVENT", "session_event", args);
       });
 
@@ -184,7 +197,7 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
         reset();
       });
     },
-    [onSessionConnected],
+    [onSessionConnected]
   );
 
   const _checkPersistedState = useCallback(
@@ -194,19 +207,24 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
       }
       // populates existing pairings to state
       setPairings(_client.pairing.getAll({ active: true }));
-      console.log("RESTORED PAIRINGS: ", _client.pairing.getAll({ active: true }));
+      console.log(
+        "RESTORED PAIRINGS: ",
+        _client.pairing.getAll({ active: true })
+      );
 
       if (typeof session !== "undefined") return;
       // populates (the last) existing session to state
       if (_client.session.length) {
         const lastKeyIndex = _client.session.keys.length - 1;
-        const _session = _client.session.get(_client.session.keys[lastKeyIndex]);
+        const _session = _client.session.get(
+          _client.session.keys[lastKeyIndex]
+        );
         console.log("RESTORED SESSION:", _session);
         await onSessionConnected(_session);
         return _session;
       }
     },
-    [session, onSessionConnected],
+    [session, onSessionConnected]
   );
 
   const createClient = useCallback(async () => {
@@ -265,7 +283,7 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
       connect,
       disconnect,
       setChains,
-    ],
+    ]
   );
 
   return (
@@ -282,7 +300,9 @@ export function ClientContextProvider({ children }: { children: ReactNode | Reac
 export function useWalletConnectClient() {
   const context = useContext(ClientContext);
   if (context === undefined) {
-    throw new Error("useWalletConnectClient must be used within a ClientContextProvider");
+    throw new Error(
+      "useWalletConnectClient must be used within a ClientContextProvider"
+    );
   }
   return context;
 }

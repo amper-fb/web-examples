@@ -9,6 +9,7 @@ interface State {
   eip155Address: string
   cosmosAddress: string
   solanaAddress: string
+  polkadotAddress: string
   nearAddress: string
 }
 
@@ -21,7 +22,8 @@ const state = proxy<State>({
   eip155Address: '',
   cosmosAddress: '',
   solanaAddress: '',
-  nearAddress: ''
+  polkadotAddress: '',
+  nearAddress: '',
 })
 
 /**
@@ -44,6 +46,10 @@ const SettingsStore = {
 
   setSolanaAddress(solanaAddress: string) {
     state.solanaAddress = solanaAddress
+  },
+
+  setPolkadotAddress(polkadotAddress: string) {
+    state.polkadotAddress = polkadotAddress
   },
 
   setNearAddress(nearAddresses: string) {

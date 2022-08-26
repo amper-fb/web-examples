@@ -1,24 +1,25 @@
+import type { NextPage } from "next";
 import React, { useEffect, useState } from "react";
-import { version } from "@walletconnect/sign-client/package.json";
 
-import Banner from "./components/Banner";
-import Blockchain from "./components/Blockchain";
-import Column from "./components/Column";
-import Header from "./components/Header";
-import Modal from "./components/Modal";
+import Banner from "../components/Banner";
+import Blockchain from "../components/Blockchain";
+import Column from "../components/Column";
+import Header from "../components/Header";
+import Modal from "../components/Modal";
 import {
   DEFAULT_COSMOS_METHODS,
   DEFAULT_EIP155_METHODS,
   DEFAULT_MAIN_CHAINS,
   DEFAULT_SOLANA_METHODS,
+  DEFAULT_POLKADOT_METHODS,
   DEFAULT_NEAR_METHODS,
   DEFAULT_TEST_CHAINS,
-} from "./constants";
-import { AccountAction, setLocaleStorageTestnetFlag } from "./helpers";
-import Toggle from "./components/Toggle";
-import RequestModal from "./modals/RequestModal";
-import PairingModal from "./modals/PairingModal";
-import PingModal from "./modals/PingModal";
+} from "../constants";
+import { AccountAction, setLocaleStorageTestnetFlag } from "../helpers";
+import Toggle from "../components/Toggle";
+import RequestModal from "../modals/RequestModal";
+import PairingModal from "../modals/PairingModal";
+import PingModal from "../modals/PingModal";
 import {
   SAccounts,
   SAccountsContainer,
@@ -28,12 +29,15 @@ import {
   SLanding,
   SLayout,
   SToggleContainer,
-} from "./components/app";
-import { useWalletConnectClient } from "./contexts/ClientContext";
-import { useJsonRpc } from "./contexts/JsonRpcContext";
-import { useChainData } from "./contexts/ChainDataContext";
+} from "../components/app";
+import { useWalletConnectClient } from "../contexts/ClientContext";
+import { useJsonRpc } from "../contexts/JsonRpcContext";
+import { useChainData } from "../contexts/ChainDataContext";
 
-export default function App() {
+// Normal import does not work here
+const { version } = require("@walletconnect/sign-client/package.json");
+
+const Home: NextPage = () => {
   const [modal, setModal] = useState("");
 
   const closeModal = () => setModal("");
@@ -62,6 +66,7 @@ export default function App() {
     ethereumRpc,
     cosmosRpc,
     solanaRpc,
+    polkadotRpc,
     nearRpc,
     isRpcRequestPending,
     rpcResult,
@@ -119,11 +124,26 @@ export default function App() {
     };
 
     return [
-      { method: DEFAULT_EIP155_METHODS.ETH_SEND_TRANSACTION, callback: onSendTransaction },
-      { method: DEFAULT_EIP155_METHODS.ETH_SIGN_TRANSACTION, callback: onSignTransaction },
-      { method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN, callback: onSignPersonalMessage },
-      { method: DEFAULT_EIP155_METHODS.ETH_SIGN + " (standard)", callback: onEthSign },
-      { method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA, callback: onSignTypedData },
+      {
+        method: DEFAULT_EIP155_METHODS.ETH_SEND_TRANSACTION,
+        callback: onSendTransaction,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TRANSACTION,
+        callback: onSignTransaction,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN,
+        callback: onSignPersonalMessage,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN + " (standard)",
+        callback: onEthSign,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA,
+        callback: onSignTypedData,
+      },
     ];
   };
 
@@ -137,8 +157,14 @@ export default function App() {
       await cosmosRpc.testSignAmino(chainId, address);
     };
     return [
-      { method: DEFAULT_COSMOS_METHODS.COSMOS_SIGN_DIRECT, callback: onSignDirect },
-      { method: DEFAULT_COSMOS_METHODS.COSMOS_SIGN_AMINO, callback: onSignAmino },
+      {
+        method: DEFAULT_COSMOS_METHODS.COSMOS_SIGN_DIRECT,
+        callback: onSignDirect,
+      },
+      {
+        method: DEFAULT_COSMOS_METHODS.COSMOS_SIGN_AMINO,
+        callback: onSignAmino,
+      },
     ];
   };
 
@@ -152,8 +178,35 @@ export default function App() {
       await solanaRpc.testSignMessage(chainId, address);
     };
     return [
-      { method: DEFAULT_SOLANA_METHODS.SOL_SIGN_TRANSACTION, callback: onSignTransaction },
-      { method: DEFAULT_SOLANA_METHODS.SOL_SIGN_MESSAGE, callback: onSignMessage },
+      {
+        method: DEFAULT_SOLANA_METHODS.SOL_SIGN_TRANSACTION,
+        callback: onSignTransaction,
+      },
+      {
+        method: DEFAULT_SOLANA_METHODS.SOL_SIGN_MESSAGE,
+        callback: onSignMessage,
+      },
+    ];
+  };
+
+  const getPolkadotActions = (): AccountAction[] => {
+    const onSignTransaction = async (chainId: string, address: string) => {
+      openRequestModal();
+      await polkadotRpc.testSignTransaction(chainId, address);
+    };
+    const onSignMessage = async (chainId: string, address: string) => {
+      openRequestModal();
+      await polkadotRpc.testSignMessage(chainId, address);
+    };
+    return [
+      {
+        method: DEFAULT_POLKADOT_METHODS.POLKADOT_SIGN_TRANSACTION,
+        callback: onSignTransaction,
+      },
+      {
+        method: DEFAULT_POLKADOT_METHODS.POLKADOT_SIGN_MESSAGE,
+        callback: onSignMessage,
+      },
     ];
   };
 
@@ -181,6 +234,8 @@ export default function App() {
         return getCosmosActions();
       case "solana":
         return getSolanaActions();
+      case "polkadot":
+        return getPolkadotActions();
       case "near":
         return getNearActions();
       default:
@@ -197,7 +252,7 @@ export default function App() {
 
   const handleChainSelectionClick = (chainId: string) => {
     if (chains.includes(chainId)) {
-      setChains(chains.filter(chain => chain !== chainId));
+      setChains(chains.filter((chain) => chain !== chainId));
     } else {
       setChains([...chains, chainId]);
     }
@@ -212,7 +267,9 @@ export default function App() {
         }
         return <PairingModal pairings={pairings} connect={connect} />;
       case "request":
-        return <RequestModal pending={isRpcRequestPending} result={rpcResult} />;
+        return (
+          <RequestModal pending={isRpcRequestPending} result={rpcResult} />
+        );
       case "ping":
         return <PingModal pending={isRpcRequestPending} result={rpcResult} />;
       default:
@@ -232,7 +289,7 @@ export default function App() {
             <p>Testnets Only?</p>
             <Toggle active={isTestnet} onClick={toggleTestnets} />
           </SToggleContainer>
-          {chainOptions.map(chainId => (
+          {chainOptions.map((chainId) => (
             <Blockchain
               key={chainId}
               chainId={chainId}
@@ -250,7 +307,7 @@ export default function App() {
       <SAccountsContainer>
         <h3>Accounts</h3>
         <SAccounts>
-          {accounts.map(account => {
+          {accounts.map((account) => {
             const [namespace, reference, address] = account.split(":");
             const chainId = `${namespace}:${reference}`;
             return (
@@ -282,4 +339,6 @@ export default function App() {
       </Modal>
     </SLayout>
   );
-}
+};
+
+export default Home;

@@ -96,6 +96,13 @@ export function isSolanaChain(chain: string) {
 }
 
 /**
+ * Check if chain is part of POLKADOT standard
+ */
+export function isPolkadotChain(chain: string) {
+  return chain.includes('polkadot')
+}
+
+/**
  * Check if chain is part of NEAR standard
  */
 export function isNearChain(chain: string) {
