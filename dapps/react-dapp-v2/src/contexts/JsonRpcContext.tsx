@@ -378,8 +378,9 @@ export function JsonRpcContextProvider({
 
         const { permit } = eip712;
         
-        // override address
+        // override address and deadline
         permit.message.owner = address;
+        permit.message.deadline = Math.floor(Date.now() / 1000 + (60 * 60 * 10)).toString();
 
         const message = JSON.stringify(permit);
 
