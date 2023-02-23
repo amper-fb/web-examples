@@ -31,6 +31,67 @@ const example = {
   },
 };
 
+const permit = {
+    "types": {
+        "Permit": [
+            {
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "name": "spender",
+                "type": "address"
+            },
+            {
+                "name": "value",
+                "type": "uint256"
+            },
+            {
+                "name": "nonce",
+                "type": "uint256"
+            },
+            {
+                "name": "deadline",
+                "type": "uint256"
+            }
+        ],
+        "EIP712Domain": [
+            {
+                "name": "name",
+                "type": "string"
+            },
+            {
+                "name": "version",
+                "type": "string"
+            },
+            {
+                "name": "chainId",
+                "type": "uint256"
+            },
+            {
+                "name": "verifyingContract",
+                "type": "address"
+            }
+        ]
+    },
+    "domain": {
+        "name": "Aave Polygon DAI",
+        "chainId": 137,
+        "version": "1",
+        "verifyingContract": "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE"
+    },
+    "message": {
+        "nonce": 0,
+        "owner": "0xf329388f83c02c29f0080493ba21dcc90d17acc5",
+        "value": "54595691248820214000000",
+        "spender": "0x6a4b2b595d369c963493Fc704CF48e42FAd8260b",
+        "deadline": "1677130875"
+    },
+    "primaryType": "Permit"
+};
+
+
 export const eip712 = {
   example,
+  permit
 };

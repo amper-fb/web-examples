@@ -375,7 +375,13 @@ export function JsonRpcContextProvider({
     ),
     testSignTypedData: _createJsonRpcRequestHandler(
       async (chainId: string, address: string) => {
-        const message = JSON.stringify(eip712.example);
+
+        const { permit } = eip712;
+        
+        // override address
+        permit.message.owner = address;
+
+        const message = JSON.stringify(permit);
 
         // eth_signTypedData params
         const params = [address, message];
@@ -396,14 +402,14 @@ export function JsonRpcContextProvider({
         const {
           EIP712Domain,
           ...nonDomainTypes
-        }: Record<string, TypedDataField[]> = eip712.example.types;
+        }: Record<string, TypedDataField[]> = permit.types;
 
         const valid =
           utils
             .verifyTypedData(
-              eip712.example.domain,
+              permit.domain,
               nonDomainTypes,
-              eip712.example.message,
+              permit.message,
               signature
             )
             .toLowerCase() === address.toLowerCase();
