@@ -164,11 +164,11 @@ const Home: NextPage = () => {
         callback: onEthSign,
       },
       {
-        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA,
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA + " (Permit)",
         callback: onSignTypedData,
       },
       {
-        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA_PERMIT2,
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA + " (Permit2)",
         callback: onSignTypedDataPermit2,
       },
     ];

@@ -52,8 +52,7 @@ export enum DEFAULT_EIP155_METHODS {
   ETH_SIGN_TRANSACTION = "eth_signTransaction",
   ETH_SIGN = "eth_sign",
   PERSONAL_SIGN = "personal_sign",
-  ETH_SIGN_TYPED_DATA = "eth_signTypedData (Permit)",
-  ETH_SIGN_TYPED_DATA_PERMIT2 = "eth_signTypedData (Permit2)",
+  ETH_SIGN_TYPED_DATA = "eth_signTypedData",
 }
 
 export enum DEFAULT_EIP_155_EVENTS {

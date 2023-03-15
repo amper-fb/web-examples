@@ -468,7 +468,7 @@ export function JsonRpcContextProvider({
             .toLowerCase() === address.toLowerCase();
 
         return {
-          method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA_PERMIT2,
+          method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA,
           address,
           valid,
           result: signature,
