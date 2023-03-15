@@ -71,6 +71,7 @@ interface IContext {
     testEthSign: TRpcRequestCallback;
     testSignPersonalMessage: TRpcRequestCallback;
     testSignTypedData: TRpcRequestCallback;
+    testSignTypedDataPermit2: TRpcRequestCallback;
   };
   cosmosRpc: {
     testSignDirect: TRpcRequestCallback;
@@ -423,7 +424,58 @@ export function JsonRpcContextProvider({
         };
       }
     ),
-  };
+
+    testSignTypedDataPermit2: _createJsonRpcRequestHandler(
+      async (chainId: string, address: string) => {
+
+        const { permitSingle } = eip712;
+        
+        // override deadline      
+        permitSingle.message.sigDeadline = Math.floor(Date.now() / 1000 + (60 * 60 * 10)).toString();
+        permitSingle.message.details.expiration = Math.floor(Date.now() / 1000 + (60 * 60 * 10)).toString();
+
+        const message = JSON.stringify(permitSingle);
+
+        // eth_signTypedData params
+        const params = [address, message];
+
+        // send message
+        const signature = await client!.request<string>({
+          topic: session!.topic,
+          chainId,
+          request: {
+            method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA,
+            params,
+          },
+        });
+
+        // Separate `EIP712Domain` type from remaining types to verify, otherwise `ethers.utils.verifyTypedData`
+        // will throw due to "unused" `EIP712Domain` type.
+        // See: https://github.com/ethers-io/ethers.js/issues/687#issuecomment-714069471
+        const {
+          EIP712Domain,
+          ...nonDomainTypes
+        }: Record<string, TypedDataField[]> = permitSingle.types;
+
+        const valid =
+          utils
+            .verifyTypedData(
+              permitSingle.domain,
+              nonDomainTypes,
+              permitSingle.message,
+              signature
+            )
+            .toLowerCase() === address.toLowerCase();
+
+        return {
+          method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA_PERMIT2,
+          address,
+          valid,
+          result: signature,
+        };
+      }
+    ),
+};
 
   // -------- COSMOS RPC METHODS --------
 

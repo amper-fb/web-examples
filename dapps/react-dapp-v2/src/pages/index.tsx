@@ -141,6 +141,10 @@ const Home: NextPage = () => {
       openRequestModal();
       await ethereumRpc.testSignTypedData(chainId, address);
     };
+    const onSignTypedDataPermit2 = async (chainId: string, address: string) => {
+      openRequestModal();
+      await ethereumRpc.testSignTypedDataPermit2(chainId, address);
+    };
 
     return [
       {
@@ -162,6 +166,10 @@ const Home: NextPage = () => {
       {
         method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA,
         callback: onSignTypedData,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.ETH_SIGN_TYPED_DATA_PERMIT2,
+        callback: onSignTypedDataPermit2,
       },
     ];
   };
