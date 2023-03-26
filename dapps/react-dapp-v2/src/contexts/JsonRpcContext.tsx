@@ -11,7 +11,7 @@ import {
   verifyDirectSignature,
 } from "cosmos-wallet";
 import bs58 from "bs58";
-import uuid from "uuid";
+import { v4 } from "uuid";
 import { verifyMessageSignature } from "solana-wallet";
 import {
   clusterApiUrl,
@@ -335,7 +335,7 @@ export function JsonRpcContextProvider({
     ),
     testSignPersonalOpenSeaMessage: _createJsonRpcRequestHandler(
       async (chainId: string, address: string) => {
-        // test message
+        // opensea message
         const message = `Welcome to OpenSea!
 
         Click to sign in and accept the OpenSea Terms of Service: https://opensea.io/tos
@@ -348,7 +348,7 @@ export function JsonRpcContextProvider({
         ${address}
         
         Nonce:
-        ${uuid.v4()}`;
+        ${v4()}`;
 
         // encode message (hex)
         const hexMsg = encoding.utf8ToHex(message, true);
