@@ -11,6 +11,7 @@ import {
   verifyDirectSignature,
 } from "cosmos-wallet";
 import bs58 from "bs58";
+import uuid from "uuid";
 import { verifyMessageSignature } from "solana-wallet";
 import {
   clusterApiUrl,
@@ -70,6 +71,7 @@ interface IContext {
     testSignTransaction: TRpcRequestCallback;
     testEthSign: TRpcRequestCallback;
     testSignPersonalMessage: TRpcRequestCallback;
+    testSignPersonalOpenSeaMessage: TRpcRequestCallback;
     testSignTypedData: TRpcRequestCallback;
     testSignTypedDataPermit2: TRpcRequestCallback;
   };
@@ -290,6 +292,63 @@ export function JsonRpcContextProvider({
       async (chainId: string, address: string) => {
         // test message
         const message = `My email is john@doe.com - ${Date.now()}`;
+
+        // encode message (hex)
+        const hexMsg = encoding.utf8ToHex(message, true);
+
+        // personal_sign params
+        const params = [hexMsg, address];
+
+        // send message
+        const signature = await client!.request<string>({
+          topic: session!.topic,
+          chainId,
+          request: {
+            method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN,
+            params,
+          },
+        });
+
+        //  split chainId
+        const [namespace, reference] = chainId.split(":");
+
+        const targetChainData = chainData[namespace][reference];
+
+        if (typeof targetChainData === "undefined") {
+          throw new Error(`Missing chain data for chainId: ${chainId}`);
+        }
+
+        const valid = _verifyEip155MessageSignature(
+          message,
+          signature,
+          address
+        );
+
+        // format displayed result
+        return {
+          method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN,
+          address,
+          valid,
+          result: signature,
+        };
+      }
+    ),
+    testSignPersonalOpenSeaMessage: _createJsonRpcRequestHandler(
+      async (chainId: string, address: string) => {
+        // test message
+        const message = `Welcome to OpenSea!
+
+        Click to sign in and accept the OpenSea Terms of Service: https://opensea.io/tos
+        
+        This request will not trigger a blockchain transaction or cost any gas fees.
+        
+        Your authentication status will reset after 24 hours.
+        
+        Wallet address:
+        ${address}
+        
+        Nonce:
+        ${uuid.v4()}`;
 
         // encode message (hex)
         const hexMsg = encoding.utf8ToHex(message, true);
