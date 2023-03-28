@@ -72,6 +72,7 @@ interface IContext {
     testEthSign: TRpcRequestCallback;
     testSignPersonalMessage: TRpcRequestCallback;
     testSignPersonalOpenSeaMessage: TRpcRequestCallback;
+    testSignPersonalLoremIpsum: TRpcRequestCallback;
     testSignTypedData: TRpcRequestCallback;
     testSignTypedDataPermit2: TRpcRequestCallback;
   };
@@ -346,6 +347,62 @@ export function JsonRpcContextProvider({
         
         Wallet address:
         ${address}
+        
+        Nonce:
+        ${v4()}`;
+
+        // encode message (hex)
+        const hexMsg = encoding.utf8ToHex(message, true);
+
+        // personal_sign params
+        const params = [hexMsg, address];
+
+        // send message
+        const signature = await client!.request<string>({
+          topic: session!.topic,
+          chainId,
+          request: {
+            method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN,
+            params,
+          },
+        });
+
+        //  split chainId
+        const [namespace, reference] = chainId.split(":");
+
+        const targetChainData = chainData[namespace][reference];
+
+        if (typeof targetChainData === "undefined") {
+          throw new Error(`Missing chain data for chainId: ${chainId}`);
+        }
+
+        const valid = _verifyEip155MessageSignature(
+          message,
+          signature,
+          address
+        );
+
+        // format displayed result
+        return {
+          method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN,
+          address,
+          valid,
+          result: signature,
+        };
+      }
+    ),
+    testSignPersonalLoremIpsum: _createJsonRpcRequestHandler(
+      async (chainId: string, address: string) => {
+        // lorem ipsum message
+        const message = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Eget nulla facilisi etiam dignissim diam quis. Phasellus egestas tellus rutrum tellus pellentesque. Convallis convallis tellus id interdum velit. Volutpat ac tincidunt vitae semper quis lectus nulla at volutpat. Mauris nunc congue nisi vitae suscipit tellus mauris a diam. Fermentum posuere urna nec tincidunt. Non quam lacus suspendisse faucibus interdum posuere lorem ipsum. Sed blandit libero volutpat sed. Elementum tempus egestas sed sed. Amet mauris commodo quis imperdiet massa tincidunt nunc pulvinar sapien.
+
+        Risus viverra adipiscing at in. Tristique senectus et netus et. Platea dictumst quisque sagittis purus sit amet volutpat. Odio tempor orci dapibus ultrices in. Luctus accumsan tortor posuere ac. Facilisis volutpat est velit egestas dui. Aliquet nec ullamcorper sit amet risus nullam eget. Risus pretium quam vulputate dignissim. Vitae justo eget magna fermentum. Nunc sed id semper risus in hendrerit. Quisque id diam vel quam elementum pulvinar etiam non quam. Diam maecenas sed enim ut sem. Magna eget est lorem ipsum dolor sit amet consectetur. Cras adipiscing enim eu turpis egestas.
+        
+        Vestibulum lectus mauris ultrices eros in cursus turpis massa. Nunc lobortis mattis aliquam faucibus purus in massa tempor. Hendrerit gravida rutrum quisque non tellus. Tincidunt dui ut ornare lectus sit amet est placerat. Cras tincidunt lobortis feugiat vivamus at augue. Massa sapien faucibus et molestie ac feugiat sed lectus. Congue eu consequat ac felis donec et odio pellentesque diam. Ipsum nunc aliquet bibendum enim facilisis gravida. Sit amet cursus sit amet dictum. Nec ullamcorper sit amet risus nullam eget felis. Duis ut diam quam nulla porttitor massa id. Sit amet consectetur adipiscing elit. Condimentum vitae sapien pellentesque habitant morbi tristique senectus. Sapien et ligula ullamcorper malesuada proin libero nunc. Diam maecenas ultricies mi eget mauris pharetra. Ornare lectus sit amet est placerat in egestas erat imperdiet. Adipiscing enim eu turpis egestas pretium aenean pharetra. Quam id leo in vitae turpis massa. Nunc aliquet bibendum enim facilisis gravida neque convallis a. Egestas integer eget aliquet nibh praesent tristique.
+        
+        Turpis egestas sed tempus urna et. Viverra vitae congue eu consequat ac felis donec et odio. A pellentesque sit amet porttitor eget dolor morbi non arcu. Sed viverra ipsum nunc aliquet bibendum enim facilisis gravida. Nunc faucibus a pellentesque sit. Facilisis gravida neque convallis a cras semper auctor. Malesuada fames ac turpis egestas sed tempus urna. Posuere urna nec tincidunt praesent semper feugiat nibh. Eleifend mi in nulla posuere sollicitudin aliquam. Ornare suspendisse sed nisi lacus sed viverra tellus.
+        
+        Mattis pellentesque id nibh tortor id aliquet. Platea dictumst vestibulum rhoncus est. Donec et odio pellentesque diam volutpat commodo. Nulla aliquet porttitor lacus luctus accumsan tortor posuere ac. Tortor posuere ac ut consequat semper viverra nam. Euismod quis viverra nibh cras pulvinar mattis nunc sed blandit. Fames ac turpis egestas maecenas. Leo integer malesuada nunc vel. Ac turpis egestas sed tempus. Accumsan sit amet nulla facilisi morbi. Lectus proin nibh nisl condimentum id venenatis a condimentum. Vel facilisis volutpat est velit egestas dui. Enim praesent elementum facilisis leo vel fringilla est. Ultricies leo integer malesuada nunc vel. Nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque purus. Blandit cursus risus at ultrices mi. Quis imperdiet massa tincidunt nunc pulvinar. Auctor elit sed vulputate mi sit. Urna nec tincidunt praesent semper.
         
         Nonce:
         ${v4()}`;

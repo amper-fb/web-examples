@@ -137,6 +137,10 @@ const Home: NextPage = () => {
       openRequestModal();
       await ethereumRpc.testSignPersonalOpenSeaMessage(chainId, address);
     };
+    const onSignPersonalLoremIpsum = async (chainId: string, address: string) => {
+      openRequestModal();
+      await ethereumRpc.testSignPersonalLoremIpsum(chainId, address);
+    };
     const onEthSign = async (chainId: string, address: string) => {
       openRequestModal();
       await ethereumRpc.testEthSign(chainId, address);
@@ -166,6 +170,10 @@ const Home: NextPage = () => {
       {
         method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN + " (OpenSea)",
         callback: onSignPersonalOpenSeaMessage,
+      },
+      {
+        method: DEFAULT_EIP155_METHODS.PERSONAL_SIGN + " (Lorem Ipsum)",
+        callback: onSignPersonalLoremIpsum,
       },
       {
         method: DEFAULT_EIP155_METHODS.ETH_SIGN + " (standard)",
